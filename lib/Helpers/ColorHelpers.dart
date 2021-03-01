@@ -9,4 +9,5 @@ class ColorHelpers {
   static const Color colorYellow = Color(0xFFF6B352);
   static const Color colorOrange = Color(0xffF68657);
   static const Color red = Color(0xfff05454);
+  static const Color planeColor = Color(0xff1687a7);
 }

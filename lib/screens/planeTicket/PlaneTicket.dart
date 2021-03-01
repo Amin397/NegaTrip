@@ -4,7 +4,9 @@ import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:nega_trip/Helpers/ColorHelpers.dart';
+import 'package:nega_trip/Helpers/NavHelper.dart';
 import 'package:nega_trip/Helpers/WidgetHelper.dart';
+import 'package:nega_trip/screens/searchTicket/searchTicket.dart';
 import 'package:persian_datetime_picker/persian_datetime_picker.dart';
 
 class PlaneTicket extends StatefulWidget {
@@ -17,22 +19,19 @@ class _PlaneTicketState extends State<PlaneTicket> {
 
   TextEditingController mabdaController = TextEditingController();
   TextEditingController maghsadController = TextEditingController();
-  TextEditingController birthDateController = TextEditingController();
+  TextEditingController travelDate = TextEditingController();
+  TextEditingController returnDate = TextEditingController();
   int _currentStep = 0;
-
   bool maghsadCompleted = false;
-
   bool dakheli = false;
-
   int typeId;
-
   bool isReturn = false;
-
   int countOld = 1;
-
   int sumPassenger = 1;
-
   int countYoung = 0;
+  int countBaby = 0;
+
+  bool isCompleted = false;
 
   @override
   Widget build(BuildContext context) {
@@ -46,7 +45,7 @@ class _PlaneTicketState extends State<PlaneTicket> {
           child: Container(
             height: size.height,
             width: size.width,
-            color: Color(0xff1687a7),
+            color: ColorHelpers.planeColor,
             child: Column(
               children: [
                 // Align(
@@ -114,9 +113,10 @@ class _PlaneTicketState extends State<PlaneTicket> {
             children: <Widget>[
               FlatButton(
                 onPressed: () {
-                  if (_currentStep == 2) {
+                  if (_currentStep == 3) {
                     setState(() {
                       maghsadCompleted = true;
+                      isCompleted = true;
                     });
                   } else {
                     onStepContinue();
@@ -150,7 +150,7 @@ class _PlaneTicketState extends State<PlaneTicket> {
         physics: ScrollPhysics(),
         onStepTapped: (int step) => setState(() => _currentStep = step),
         onStepContinue:
-            _currentStep < 2 ? () => setState(() => _currentStep += 1) : null,
+            _currentStep <= 2 ? () => setState(() => _currentStep += 1) : null,
         onStepCancel:
             _currentStep > 0 ? () => setState(() => _currentStep -= 1) : null,
         steps: <Step>[
@@ -163,34 +163,70 @@ class _PlaneTicketState extends State<PlaneTicket> {
             title: AutoSizeText('تاریخ رفت'),
             content: Container(
               width: size.width,
-              child: GestureDetector(
-                onTap: () {
-                  showDialog(
-                    context: context,
-                    builder: (BuildContext _) {
-                      return PersianDateTimePicker(
-                        color: Colors.orangeAccent,
-                        initial: '1399/12/09',
-                        type: 'date',
-                        onSelect: (date) {
-                          setState(() {
-                            birthDateController.text = date;
-                          });
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  GestureDetector(
+                    onTap: () {
+                      showDialog(
+                        context: context,
+                        builder: (BuildContext _) {
+                          return PersianDateTimePicker(
+                            color: Colors.orangeAccent,
+                            initial: '1399/12/09',
+                            type: 'date',
+                            onSelect: (date) {
+                              setState(() {
+                                travelDate.text = date;
+                              });
+                            },
+                          );
                         },
                       );
                     },
-                  );
-                },
-                child: WidgetHelper.textFormField(
-                  size: size,
-                  controller: birthDateController,
-                  h: .05,
-                  w: 1,
-                  label: 'تاریخ رفت',
-                  maxLines: 1,
-                  numeric: false,
-                  enable: false,
-                ),
+                    child: WidgetHelper.textFormField(
+                      size: size,
+                      controller: travelDate,
+                      h: .05,
+                      w: isReturn ? .35 : .6,
+                      label: 'تاریخ رفت',
+                      maxLines: 1,
+                      numeric: false,
+                      enable: false,
+                    ),
+                  ),
+                  isReturn
+                      ? GestureDetector(
+                          onTap: () {
+                            showDialog(
+                              context: context,
+                              builder: (BuildContext _) {
+                                return PersianDateTimePicker(
+                                  color: Colors.orangeAccent,
+                                  initial: '1399/12/10',
+                                  type: 'date',
+                                  onSelect: (date) {
+                                    setState(() {
+                                      returnDate.text = date;
+                                    });
+                                  },
+                                );
+                              },
+                            );
+                          },
+                          child: WidgetHelper.textFormField(
+                            size: size,
+                            controller: returnDate,
+                            h: .05,
+                            w: .35,
+                            label: 'تاریخ برگشت',
+                            maxLines: 1,
+                            numeric: false,
+                            enable: false,
+                          ),
+                        )
+                      : Container()
+                ],
               ),
             ),
           ),
@@ -215,7 +251,7 @@ class _PlaneTicketState extends State<PlaneTicket> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         GestureDetector(
-                          onTap: (){
+                          onTap: () {
                             addPassengerOld();
                           },
                           child: Container(
@@ -250,13 +286,13 @@ class _PlaneTicketState extends State<PlaneTicket> {
                           ],
                         ),
                         GestureDetector(
-                          onTap: (){
+                          onTap: () {
                             decPassengerOld();
                           },
-                          onLongPress: (){
+                          onLongPress: () {
                             setState(() {
+                              sumPassenger -= countOld;
                               countOld = 1;
-                              sumPassenger = countOld;
                             });
                           },
                           child: Container(
@@ -278,6 +314,9 @@ class _PlaneTicketState extends State<PlaneTicket> {
                       ],
                     ),
                   ),
+                  SizedBox(
+                    height: 6.0,
+                  ),
                   Container(
                     decoration: BoxDecoration(
                         border: Border.all(color: Colors.white54, width: 1),
@@ -287,7 +326,7 @@ class _PlaneTicketState extends State<PlaneTicket> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         GestureDetector(
-                          onTap: (){
+                          onTap: () {
                             addPassengerYoung();
                           },
                           child: Container(
@@ -312,7 +351,7 @@ class _PlaneTicketState extends State<PlaneTicket> {
                               style: TextStyle(color: Colors.white),
                             ),
                             AutoSizeText(
-                              '  (12 سال به بالا)',
+                              '  (بین 2 تا 12 سال)',
                               maxLines: 1,
                               maxFontSize: 12.0,
                               minFontSize: 4.0,
@@ -322,13 +361,96 @@ class _PlaneTicketState extends State<PlaneTicket> {
                           ],
                         ),
                         GestureDetector(
-                          onTap: (){
+                          onTap: () {
                             decPassengerYoung();
                           },
-                          onLongPress: (){
+                          onLongPress: () {
                             setState(() {
-                              countYoung = 1;
-                              sumPassenger = countYoung;
+                              sumPassenger -= countYoung;
+                              countYoung = 0;
+                            });
+                          },
+                          child: Container(
+                            margin: EdgeInsets.all(2.0),
+                            height: double.maxFinite,
+                            width: size.width * .1,
+                            decoration: BoxDecoration(
+                              color: Colors.white24,
+                              borderRadius: BorderRadius.circular(8.0),
+                            ),
+                            child: Center(
+                              child: Icon(
+                                Icons.remove,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        )
+                      ],
+                    ),
+                  ),
+                  SizedBox(
+                    height: 6.0,
+                  ),
+                  Container(
+                    decoration: BoxDecoration(
+                      border: Border.all(
+                        color: Colors.white54,
+                        width: 1,
+                      ),
+                      borderRadius: BorderRadius.circular(8.0),
+                    ),
+                    height: size.height * .05,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        GestureDetector(
+                          onTap: () {
+                            addPassengerBaby();
+                          },
+                          child: Container(
+                            margin: EdgeInsets.all(2.0),
+                            height: double.maxFinite,
+                            width: size.width * .1,
+                            decoration: BoxDecoration(
+                              color: Colors.greenAccent.withOpacity(.9),
+                              borderRadius: BorderRadius.circular(8.0),
+                            ),
+                            child: Center(
+                              child: Icon(
+                                Icons.add,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                        Row(
+                          children: [
+                            AutoSizeText(
+                              '$countBaby مسافر',
+                              style: TextStyle(
+                                color: Colors.white,
+                              ),
+                            ),
+                            AutoSizeText(
+                              '  (زیر 2 سال)',
+                              maxLines: 1,
+                              maxFontSize: 12.0,
+                              minFontSize: 4.0,
+                              style: TextStyle(
+                                color: Colors.white38,
+                                fontSize: 9.0,
+                              ),
+                            ),
+                          ],
+                        ),
+                        GestureDetector(
+                          onTap: () {
+                            decPassengerBaby();
+                          },
+                          onLongPress: () {
+                            setState(() {
+                              countBaby = 0;
                             });
                           },
                           child: Container(
@@ -376,7 +498,7 @@ class _PlaneTicketState extends State<PlaneTicket> {
                     label: 'مبداء',
                     enable: true,
                     maxLines: 1,
-                    borderColor: Color(0xff1687a7),
+                    borderColor: ColorHelpers.planeColor,
                   )
                 ],
               ),
@@ -404,7 +526,7 @@ class _PlaneTicketState extends State<PlaneTicket> {
                     label: 'مقصد',
                     enable: true,
                     maxLines: 1,
-                    borderColor: Color(0xff1687a7),
+                    borderColor: ColorHelpers.planeColor,
                   )
                 ],
               ),
@@ -424,9 +546,7 @@ class _PlaneTicketState extends State<PlaneTicket> {
         crossAxisAlignment: CrossAxisAlignment.center,
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          (maghsadCompleted &&
-                  _currentStep == 2 &&
-                  mabdaController.text.isNotEmpty)
+          (maghsadCompleted && maghsadController.text.isNotEmpty)
               ? Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -446,37 +566,72 @@ class _PlaneTicketState extends State<PlaneTicket> {
                   ],
                 )
               : Container(),
-          (maghsadCompleted &&
-                  _currentStep == 2 &&
-                  maghsadController.text.isNotEmpty)
+          (maghsadCompleted && maghsadController.text.isNotEmpty)
               ? Expanded(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16.0),
-                    child: Stack(
-                      children: [
-                        Center(
-                          child: Container(
-                            width: double.maxFinite,
-                            height: .9,
-                            color: Colors.white,
+                  child: Column(
+                    children: [
+                      Flexible(
+                        flex: 1,
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 16.0),
+                          child: Stack(
+                            children: [
+                              Center(
+                                child: Container(
+                                  width: double.maxFinite,
+                                  height: .9,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              Center(
+                                child: Transform.rotate(
+                                  angle: 1.6,
+                                  child: Icon(
+                                    Icons.airplanemode_on_outlined,
+                                    color: Colors.white,
+                                    size: 30.0,
+                                  ),
+                                ),
+                              )
+                            ],
                           ),
                         ),
-                        Center(
-                          child: Transform.rotate(
-                            angle: 1.6,
-                            child: Icon(
-                              Icons.airplanemode_on_outlined,
-                              color: Colors.white,
-                              size: 30.0,
+                      ),
+                      (!isReturn)?Container():Flexible(
+                        flex: 1,
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 16.0),
+                          child: Container(
+                            height: double.maxFinite,
+                            child: Stack(
+                              children: [
+                                Center(
+                                  child: Container(
+                                    width: double.maxFinite,
+                                    height: .9,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                Center(
+                                  child: Transform.rotate(
+                                    angle: 4.7,
+                                    child: Icon(
+                                      Icons.airplanemode_on_outlined,
+                                      color: Colors.white,
+                                      size: 30.0,
+                                    ),
+                                  ),
+                                )
+                              ],
                             ),
                           ),
-                        )
-                      ],
-                    ),
+                        ),
+                      ),
+                    ],
                   ),
                 )
               : Container(),
-          (mabdaController.text.isNotEmpty && _currentStep > 1)
+          (mabdaController.text.isNotEmpty)
               ? Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -508,20 +663,26 @@ class _PlaneTicketState extends State<PlaneTicket> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          WidgetHelper.sspRadioGroup(
-            title: ['داخلی', 'خارجی'],
-            value: [1, 2],
-            valueSelect: typeId,
-            isVertical: true,
-            direction: TextDirection.rtl,
-            callback: (vS, tS, iS) {
-              setState(
-                () {
-                  typeId = vS;
-                  print(typeId.toString());
-                },
-              );
-            },
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16.0),
+            child: Row(
+              children: [
+                AutoSizeText(
+                  '$sumPassenger',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16.0,
+                  ),
+                ),
+                AutoSizeText(
+                  ' مسافر',
+                  style: TextStyle(
+                    color: Colors.white38,
+                    fontSize: 10.0,
+                  ),
+                ),
+              ],
+            ),
           ),
           Container(
             width: size.width * .4,
@@ -530,13 +691,14 @@ class _PlaneTicketState extends State<PlaneTicket> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Switch(
-                    activeColor: ColorHelpers.colorOrange,
-                    value: isReturn,
-                    onChanged: (value) {
-                      setState(() {
-                        isReturn = value;
-                      });
-                    }),
+                  activeColor: ColorHelpers.colorOrange,
+                  value: isReturn,
+                  onChanged: (value) {
+                    setState(() {
+                      isReturn = value;
+                    });
+                  },
+                ),
                 AutoSizeText(
                   (isReturn) ? 'دوطرفه' : 'یک طرفه',
                   maxLines: 1,
@@ -556,22 +718,44 @@ class _PlaneTicketState extends State<PlaneTicket> {
   }
 
   Widget _buildSearchButton() {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
-      child: Material(
-        elevation: 5.0,
-        borderRadius: BorderRadius.circular(10.0),
-        child: Container(
-          width: size.width,
-          height: size.height * .05,
-          decoration: BoxDecoration(
-            color: Colors.redAccent,
-            borderRadius: BorderRadius.circular(10.0),
+    return GestureDetector(
+      onTap: () {
+        // if (mabdaController.text.isNotEmpty &&
+        //     maghsadController.text.isNotEmpty) {
+        //   if (isReturn) {
+        //     if (returnDate.text.isNotEmpty) {
+        NavHelper.push(
+          context,
+          SearchTicket(
+            date: travelDate.text,
+            mabda: mabdaController.text,
+            maghsad: maghsadController.text,
           ),
-          child: Center(
-            child: AutoSizeText(
-              'جست و جو',
-              style: TextStyle(color: Colors.white),
+        );
+        //     }
+        //   } else if (travelDate.text.isNotEmpty) {
+        //     NavHelper.push(context, SearchTicket());
+        //   }
+        // } else {}
+      },
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+        child: Material(
+          elevation: 5.0,
+          borderRadius: BorderRadius.circular(10.0),
+          child: AnimatedContainer(
+            duration: Duration(milliseconds: 500),
+            width: size.width,
+            height: size.height * .05,
+            decoration: BoxDecoration(
+              color: isCompleted ? Colors.greenAccent : Colors.redAccent,
+              borderRadius: BorderRadius.circular(10.0),
+            ),
+            child: Center(
+              child: AutoSizeText(
+                'جست و جو',
+                style: TextStyle(color: Colors.white),
+              ),
             ),
           ),
         ),
@@ -580,53 +764,69 @@ class _PlaneTicketState extends State<PlaneTicket> {
   }
 
   void addPassengerOld() {
-    setState(() {
-      if(sumPassenger>=9){
-
-      }else{
-        setState(() {
-          countOld++;
-          sumPassenger = sumPassenger + 1;
-        });
-      }
-    });
+    if (sumPassenger == 9) {
+      null;
+    } else {
+      setState(() {
+        countOld++;
+        sumPassenger = sumPassenger + 1;
+      });
+    }
   }
 
   void decPassengerOld() {
-    if(sumPassenger <= 1){
-      print('amin');
-    }else if(countOld == 1){
-      print('amin');
-    }else{
+    if (sumPassenger == 1 && countOld == 1) {
+      null;
+    } else {
       setState(() {
         countOld--;
-        sumPassenger --;
+        sumPassenger--;
       });
     }
   }
 
   void addPassengerYoung() {
-    setState(() {
-      if(sumPassenger>=9){
-        print('hassan');
-      }else{
-        setState(() {
-          countYoung++;
-          sumPassenger = sumPassenger + 1;
-        });
-      }
-    });
+    if (sumPassenger >= 9) {
+      null;
+    } else {
+      setState(() {
+        countYoung++;
+        sumPassenger = sumPassenger + 1;
+      });
+    }
   }
 
   void decPassengerYoung() {
-    if(sumPassenger <= 1){
-      print('amin');
-    }else if(countYoung == 1){
-      print('amin');
-    }else{
+    if (sumPassenger == 0 && countYoung == 0) {
+      null;
+    } else {
       setState(() {
         countYoung--;
-        sumPassenger --;
+        sumPassenger--;
+      });
+    }
+  }
+
+  void decPassengerBaby() {
+    if (sumPassenger <= 0) {
+      print('amin');
+    } else if (countBaby == 0) {
+      print('amin');
+    } else {
+      setState(() {
+        countBaby--;
+        sumPassenger--;
+      });
+    }
+  }
+
+  void addPassengerBaby() {
+    if (sumPassenger >= 9) {
+      null;
+    } else {
+      setState(() {
+        countBaby++;
+        sumPassenger = sumPassenger + 1;
       });
     }
   }
